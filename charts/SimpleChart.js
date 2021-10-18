@@ -59,10 +59,9 @@ export default function SimpleChart(props) {
                 ))
     }
 
-    const dataForChart = formatData(dataFromServer ?? []).flat(2);
+    const dataForChart = formatData(dataFromServer ?? {}).flat(2);
 
-    const av = average && Object.entries(
-        JSON.parse(average.replaceAll("NaN", null)))
+    const av = average
 
     const semanticInfo = getSemanticInfo(dataType);
     return (
@@ -102,9 +101,9 @@ export default function SimpleChart(props) {
             {average && <>
                 <ul>
                     {Object.entries(av)
-                        .map(([_, v], i) =>
+                        .map(([k, v], i) =>
                             <li key={i}>
-                                {`${v}`}
+                                {`${k}: ${v}`}
                             </li>
                         )}
                 </ul>
