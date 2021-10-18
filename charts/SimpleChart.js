@@ -5,7 +5,7 @@ import {useQueryClient} from "react-query";
 import useAverage from "../hooks/useAverage";
 
 const formatDate = (unixDate) => {
-    const date = new Date(+unixDate*1000);
+    const date = new Date(+unixDate * 1000);
     const lang = 'en-US';
     const options = {month: '2-digit', day: '2-digit', hour: "2-digit", minute: "2-digit"};
     return date.toLocaleDateString(lang, options);
@@ -13,13 +13,39 @@ const formatDate = (unixDate) => {
 
 export default function SimpleChart(props) {
     const [startDate, setStarDate] = useState("");
+    const [meanDate, setMeanDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [dataType, setDataType] = useState("");
     const [iata, setIata] = useState("");
     const queryClient = useQueryClient();
-    const {data: dataFromServer} = useData(iata, startDate, endDate, dataType);
-    const {data: average} = useAverage(iata, endDate)
+    const {data: dataFromServer, isLoading, isFetching} = useData(iata, startDate, endDate, dataType);
+    const {data: average} = useAverage(iata, meanDate)
 
+    const getSemanticInfo = (d) => {
+        let info = {};
+        switch (d) {
+            case "temperature" :
+                info = {
+                    name: "Temperature",
+                    unit: "(°C)"
+                }
+                break;
+            case "wind_speed" :
+                info = {
+                    name: "Wind speed",
+                    unit: "(m/s)"
+                };
+                break;
+            default :
+                info = {
+                    name: "Atmospheric pressure",
+                    unit: "(P)"
+                };
+        }
+        info.title = info.name + " in fonction of the time.";
+        info.yAxis = info.name + " " + info.unit;
+        return info;
+    }
 
     const formatData = (data) => {
         return Object.entries(data)
@@ -35,7 +61,10 @@ export default function SimpleChart(props) {
 
     const dataForChart = formatData(dataFromServer ?? []).flat(2);
 
+    const av = average && Object.entries(
+        JSON.parse(average.replaceAll("NaN", null)))
 
+    const semanticInfo = getSemanticInfo(dataType);
     return (
         <div style={{width: '100%'}}>
             <h4>Average state of the weather</h4>
@@ -46,6 +75,10 @@ export default function SimpleChart(props) {
             <label htmlFor="endDate">End date</label>
             <input id="endDate" type="datetime-local" value={endDate}
                    onChange={({target}) => setEndDate(target.value)}/>
+            <br/>
+            <label htmlFor="meanDate">Mean date</label>
+            <input id="meanDate" type="date" value={meanDate}
+                   onChange={({target}) => setMeanDate(target.value)}/>
             <br/>
             <label htmlFor="iata">IATA</label>
             <select id="iata" value={iata}
@@ -66,22 +99,29 @@ export default function SimpleChart(props) {
             </select>
             <br/>
             <button onClick={() => queryClient.invalidateQueries("data")}>Refresh</button>
-            <pre>
-                {JSON.stringify(average, null, 2)}
-            </pre>
+            {average && <>
+                <ul>
+                    {Object.entries(av)
+                        .map(([_, v], i) =>
+                            <li key={i}>
+                                {`${v}`}
+                            </li>
+                        )}
+                </ul>
+            </>}
+            <h4>{semanticInfo.title}</h4>
             <div style={{padding: "30px"}}>
-
-            <ResponsiveContainer width="100%" height={200}>
-                <LineChart width={500} height={300} data={dataForChart}>
-                    <XAxis dataKey="time" interval="preserveStart" allowDuplicatedCategory={false}/>
-                    <YAxis/>
-                    <CartesianGrid stroke="#eee" strokeDasharray="5 5"/>
-                    <Line type="monotone" dataKey="value" stroke="#8884d8" dot={false}/>
-                </LineChart>
-            </ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={dataForChart}>
+                        <XAxis dataKey="time" interval="preserveStart" tick={{fontSize: 10, fill: 'orange'}}/>
+                        <YAxis label={{ value: semanticInfo.yAxis , angle: -90, position: 'insideLeft' }} />
+                        <CartesianGrid stroke="#eee" strokeDasharray="5 5"/>
+                        <Line type="monotone" dataKey="value" stroke="orange" dot={false} />
+                    </LineChart>
+                </ResponsiveContainer>
             </div>
-
-
+            {isLoading || isFetching && <p>Loading ...</p>}
         </div>
+
     );
 }
