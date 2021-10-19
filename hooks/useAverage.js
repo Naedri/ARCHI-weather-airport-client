@@ -14,7 +14,7 @@ const getAverage = async (IATA, date) => {
 
 export default function useAverage(IATA, date) {
 
-    return useQuery(["average", IATA, date],
+    return useQuery(["data", IATA, date],
         () => getAverage(IATA, date),
         {
             enabled: !!(date && IATA)

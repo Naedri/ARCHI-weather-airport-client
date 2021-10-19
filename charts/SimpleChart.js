@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import useData from "../hooks/useData";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
-import { useQueryClient } from "react-query";
+import {CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis} from 'recharts';
+import {useQueryClient} from "react-query";
 import useAverage from "../hooks/useAverage";
 
 const formatDate = (unixDate) => {
     const date = new Date(+unixDate * 1000);
     const lang = 'en-US';
-    const options = { month: '2-digit', day: '2-digit', hour: "2-digit", minute: "2-digit" };
+    const options = {month: '2-digit', day: '2-digit', hour: "2-digit", minute: "2-digit"};
     return date.toLocaleDateString(lang, options);
 }
 
@@ -18,8 +18,8 @@ export default function SimpleChart(props) {
     const [dataType, setDataType] = useState("");
     const [iata, setIata] = useState("");
     const queryClient = useQueryClient();
-    const { data: dataFromServer, isLoading, isFetching } = useData(iata, startDate, endDate, dataType);
-    const { data: average } = useAverage(iata, meanDate)
+    const {data: dataFromServer, isLoading, isFetching} = useData(iata, startDate, endDate, dataType);
+    const {data: average} = useAverage(iata, meanDate)
 
     const getSemanticInfo = (d) => {
         let info = {};
@@ -52,10 +52,10 @@ export default function SimpleChart(props) {
             .map(([_, v]) =>
                 v.map(entry =>
                     Object.entries(entry).map(([time, value]) =>
-                    ({
-                        time: formatDate(time),
-                        value
-                    }))
+                        ({
+                            time: formatDate(time),
+                            value
+                        }))
                 ))
     }
 
@@ -65,49 +65,49 @@ export default function SimpleChart(props) {
 
     const semanticInfo = getSemanticInfo(dataType);
     return (
-        <div style={{ width: '100%' }}>
+        <div className="container">
             <h1>State of the weather</h1>
             <h2>Options</h2>
+            <div className="grid grid--gutters">
+                <div className="grid__item grid__item--1-5">
+                    <label htmlFor="iata">IATA : </label>
+                    <select id="iata" value={iata}
+                            onChange={({target}) => setIata(target.value)}>
+                        <option value="" disabled>--Please choose an airport--</option>
+                        <option value="NYC">US - New York</option>
+                        <option value="NTE">FR - Nantes</option>
+                    </select>
+                </div>
+                <div className="grid__item grid__item--1-5">
+                    <label htmlFor="startDate">Start date : </label>
+                    <input id="startDate" type="datetime-local" value={startDate}
+                           onChange={({target}) => setStarDate(target.value)}/>
+                </div>
+                <div className="grid__item grid__item--1-5">
+                    <label htmlFor="endDate">End date : </label>
+                    <input id="endDate" type="datetime-local" value={endDate}
+                           onChange={({target}) => setEndDate(target.value)}/>
+                </div>
+                <div className="grid__item grid__item--1-5">
+                    <label htmlFor="dataType">Data type : </label>
+                    <select id="dataType" value={dataType}
+                            onChange={({target}) => setDataType(target.value)}>
+                        <option value="" disabled>--Please choose a type of mesure--</option>
+                        <option value="temperature">Temperature</option>
+                        <option value="wind_speed">Wind speed</option>
+                        <option value="atmospheric_pressure">Atmospheric pressure</option>
+                    </select>
+                </div>
+                <div className="grid__item grid__item--1-5">
+                    <label htmlFor="refresh">Refresh</label> <button id="refresh" onClick={() => queryClient.invalidateQueries("data")}>🔄</button>
+                </div>
+            </div>
 
-            <h3>1) select the airport</h3>
-            <label htmlFor="iata">IATA : </label>
-            <select id="iata" value={iata}
-                onChange={({ target }) => setIata(target.value)}>
-                <option value="" disabled>--Please choose an airport--</option>
-                <option value="NYC">US - New York</option>
-                <option value="NTE">FR - Nantes</option>
-            </select>
-            <br />
-
-            <h3>2) select either a range of date and a data type or either one day</h3>
-
-            <h4>- Range of date</h4>
-            <label htmlFor="startDate">Start date : </label>
-            <input id="startDate" type="datetime-local" value={startDate}
-                onChange={({ target }) => setStarDate(target.value)} />
-            <br />
-            <label htmlFor="endDate">End date : </label>
-            <input id="endDate" type="datetime-local" value={endDate}
-                onChange={({ target }) => setEndDate(target.value)} />
-            <br />
-            <label htmlFor="dataType">Data type : </label>
-            <select id="dataType" value={dataType}
-                onChange={({ target }) => setDataType(target.value)}>
-                <option value="" disabled>--Please choose a type of mesure--</option>
-                <option value="temperature">Temperature</option>
-                <option value="wind_speed">Wind speed</option>
-                <option value="atmospheric_pressure">Atmospheric pressure</option>
-            </select>
-            <br />
-
-            <h4>- One day</h4>
+            <h4>- Select one day to see average</h4>
             <label htmlFor="meanDate">Mean date : </label>
             <input id="meanDate" type="date" value={meanDate}
-                onChange={({ target }) => setMeanDate(target.value)} />
-            <br />
+                   onChange={({target}) => setMeanDate(target.value)}/>
 
-            <h3>3) Refresh data whenever you want</h3>
-            <button onClick={() => queryClient.invalidateQueries("data")}>Refresh</button>
             {average && <>
                 <ul>
                     {Object.entries(av)
@@ -118,27 +118,19 @@ export default function SimpleChart(props) {
                         )}
                 </ul>
             </>}
-            <br />
 
             {isLoading || isFetching && <p>Loading ...</p>}
-
-            <h2>Results</h2>
-
-            <h3>Current state of the weather</h3>
             <h4>{semanticInfo.title}</h4>
-            <div style={{ padding: "30px" }}>
+            <div style={{padding: "30px"}}>
                 <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={dataForChart}>
-                        <XAxis dataKey="time" interval="preserveStart" tick={{ fontSize: 10, fill: 'orange' }} />
-                        <YAxis label={{ value: semanticInfo.yAxis, angle: -90, position: 'insideLeft' }} />
-                        <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-                        <Line type="monotone" dataKey="value" stroke="orange" dot={false} />
+                        <XAxis dataKey="time" interval="preserveStart" tick={{fontSize: 10, fill: 'orange'}}/>
+                        <YAxis label={{value: semanticInfo.yAxis, angle: -90, position: 'insideLeft'}}/>
+                        <CartesianGrid stroke="#eee" strokeDasharray="5 5"/>
+                        <Line type="monotone" dataKey="value" stroke="orange" dot={false}/>
                     </LineChart>
                 </ResponsiveContainer>
             </div>
-
-            <h3>Average state of the weather</h3>
-
         </div>
 
     );
