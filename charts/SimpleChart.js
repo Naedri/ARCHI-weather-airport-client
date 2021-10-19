@@ -59,77 +59,83 @@ export default function SimpleChart(props) {
                 ))
     }
 
-    const dataForChart = formatData(dataFromServer ?? {}).flat(2);
+    const chartMemo = React.useMemo(() => {
+            const semanticInfo = getSemanticInfo(dataType);
+            return (<ResponsiveContainer width="100%" height={350}>
+                <LineChart data={formatData(dataFromServer ?? {}).flat(2)}>
+                    <XAxis dataKey="time" interval="preserveStart" tick={{fontSize: 10, fill: 'blue'}}/>
+                    <YAxis label={{value: semanticInfo.yAxis, angle: -90, position: 'insideLeft'}}/>
+                    <CartesianGrid stroke="#eee" strokeDasharray="5 5"/>
+                    <Line type="monotone" dataKey="value" stroke="blue" dot={false}/>
+                </LineChart>
+            </ResponsiveContainer>)
+        }
+        , [dataFromServer, dataType])
 
-    const av = average
 
-    const semanticInfo = getSemanticInfo(dataType);
     return (
         <div className="container">
-            <h1>State of the weather</h1>
-            <h2>Options</h2>
-            <div className="grid grid--gutters">
-                <div className="grid__item grid__item--1-5">
-                    <label htmlFor="iata">IATA : </label>
-                    <select id="iata" value={iata}
-                            onChange={({target}) => setIata(target.value)}>
-                        <option value="" disabled>--Please choose an airport--</option>
-                        <option value="NYC">US - New York</option>
-                        <option value="NTE">FR - Nantes</option>
-                    </select>
-                </div>
-                <div className="grid__item grid__item--1-5">
-                    <label htmlFor="startDate">Start date : </label>
-                    <input id="startDate" type="datetime-local" value={startDate}
-                           onChange={({target}) => setStarDate(target.value)}/>
-                </div>
-                <div className="grid__item grid__item--1-5">
-                    <label htmlFor="endDate">End date : </label>
-                    <input id="endDate" type="datetime-local" value={endDate}
-                           onChange={({target}) => setEndDate(target.value)}/>
-                </div>
-                <div className="grid__item grid__item--1-5">
-                    <label htmlFor="dataType">Data type : </label>
-                    <select id="dataType" value={dataType}
-                            onChange={({target}) => setDataType(target.value)}>
-                        <option value="" disabled>--Please choose a type of mesure--</option>
-                        <option value="temperature">Temperature</option>
-                        <option value="wind_speed">Wind speed</option>
-                        <option value="atmospheric_pressure">Atmospheric pressure</option>
-                    </select>
-                </div>
-                <div className="grid__item grid__item--1-5">
-                    <label htmlFor="refresh">Refresh</label> <button id="refresh" onClick={() => queryClient.invalidateQueries("data")}>🔄</button>
+            <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+                <h1>State of the weather</h1>
+                {isLoading || isFetching && <p>Loading ...</p>}
+            </div>
+
+            <div className="bordered">
+                <div className="grid grid--gutters">
+                    <div className="grid__item grid__item--1-5">
+                        <label htmlFor="iata">IATA : </label>
+                        <select id="iata" value={iata}
+                                onChange={({target}) => setIata(target.value)}>
+                            <option value="" disabled>--Please choose an airport--</option>
+                            <option value="NYC">US - New York</option>
+                            <option value="NTE">FR - Nantes</option>
+                        </select>
+                    </div>
+                    <div className="grid__item grid__item--1-5">
+                        <label htmlFor="startDate">Start date : </label>
+                        <input id="startDate" type="datetime-local" value={startDate}
+                               onChange={({target}) => setStarDate(target.value)}/>
+                    </div>
+                    <div className="grid__item grid__item--1-5">
+                        <label htmlFor="endDate">End date : </label>
+                        <input id="endDate" type="datetime-local" value={endDate}
+                               onChange={({target}) => setEndDate(target.value)}/>
+                    </div>
+                    <div className="grid__item grid__item--1-5">
+                        <label htmlFor="dataType">Data type : </label>
+                        <select id="dataType" value={dataType}
+                                onChange={({target}) => setDataType(target.value)}>
+                            <option value="" disabled>--Please choose a type of mesure--</option>
+                            <option value="temperature">Temperature</option>
+                            <option value="wind_speed">Wind speed</option>
+                            <option value="atmospheric_pressure">Atmospheric pressure</option>
+                        </select>
+                    </div>
+                    <div className="grid__item grid__item--1-5">
+                        <label htmlFor="refresh">Refresh</label>
+                        <button id="refresh" onClick={() => queryClient.invalidateQueries("data")}>🔄</button>
+                    </div>
                 </div>
             </div>
 
-            <h4>- Select one day to see average</h4>
             <label htmlFor="meanDate">Mean date : </label>
             <input id="meanDate" type="date" value={meanDate}
                    onChange={({target}) => setMeanDate(target.value)}/>
-
             {average && <>
                 <ul>
-                    {Object.entries(av)
-                        .map(([k, v], i) =>
-                            <li key={i}>
-                                {`${k}: ${v}`}
-                            </li>
-                        )}
+                    {Object.entries(average)
+                        .map(([k, v], i) => {
+                            let type = getSemanticInfo(k);
+                            return (
+                                <li key={i}>
+                                    {`${type.name}: ${v} ${type.unit}`}
+                                </li>
+                            )
+                        })}
                 </ul>
             </>}
-
-            {isLoading || isFetching && <p>Loading ...</p>}
-            <h4>{semanticInfo.title}</h4>
             <div style={{padding: "30px"}}>
-                <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={dataForChart}>
-                        <XAxis dataKey="time" interval="preserveStart" tick={{fontSize: 10, fill: 'orange'}}/>
-                        <YAxis label={{value: semanticInfo.yAxis, angle: -90, position: 'insideLeft'}}/>
-                        <CartesianGrid stroke="#eee" strokeDasharray="5 5"/>
-                        <Line type="monotone" dataKey="value" stroke="orange" dot={false}/>
-                    </LineChart>
-                </ResponsiveContainer>
+                {chartMemo}
             </div>
         </div>
 
