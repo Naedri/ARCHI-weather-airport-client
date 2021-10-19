@@ -1,8 +1,9 @@
 import React, {useState} from "react";
 import useData from "../hooks/useData";
-import {CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis} from 'recharts';
+import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, XAxis, YAxis} from 'recharts';
 import {useQueryClient} from "react-query";
 import useAverage from "../hooks/useAverage";
+import colors from "./Colors";
 
 const formatDate = (unixDate) => {
     const date = new Date(+unixDate * 1000);
@@ -48,25 +49,38 @@ export default function SimpleChart(props) {
     }
 
     const formatData = (data) => {
-        return Object.entries(data)
-            .map(([_, v]) =>
-                v.map(entry =>
-                    Object.entries(entry).map(([time, value]) =>
-                        ({
-                            time: formatDate(time),
-                            value
-                        }))
-                ))
+        const myObj = {};
+        Object.entries(data)
+            .forEach(([probeId, v]) =>
+                v.forEach(entry =>
+                    Object.entries(entry).forEach(([time, value]) => {
+                            myObj[time] = {...myObj[time], [probeId]: value}
+                        }
+                    )))
+        return Object.entries(myObj).map(([timeStamp, probes]) => {
+            return {...probes, time: formatDate(timeStamp)}
+        })
     }
 
     const chartMemo = React.useMemo(() => {
             const semanticInfo = getSemanticInfo(dataType);
+            const data = formatData(dataFromServer ?? {})
             return (<ResponsiveContainer width="100%" height={350}>
-                <LineChart data={formatData(dataFromServer ?? {}).flat(2)}>
+                <LineChart data={data}>
                     <XAxis dataKey="time" interval="preserveStart" tick={{fontSize: 10, fill: 'blue'}}/>
                     <YAxis label={{value: semanticInfo.yAxis, angle: -90, position: 'insideLeft'}}/>
                     <CartesianGrid stroke="#eee" strokeDasharray="5 5"/>
-                    <Line type="monotone" dataKey="value" stroke="blue" dot={false}/>
+                    {
+                        Object.keys(dataFromServer ?? {})
+                            .map((probeId, index) => <Line type="monotone"
+                                                           key={probeId}
+                                                           dataKey={probeId}
+                                                           connectNulls
+                                                           stroke={colors[index].hex}
+                                                           dot={false}/>)
+                    }
+
+                    <Legend/>
                 </LineChart>
             </ResponsiveContainer>)
         }
