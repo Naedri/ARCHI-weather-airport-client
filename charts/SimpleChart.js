@@ -103,11 +103,11 @@ export default function SimpleChart(props) {
                         <select id="iata" value={iata}
                             onChange={({ target }) => setIata(target.value)}>
                             <option value="" disabled>--Please choose an airport--</option>
-                            {iataAvailable && <>
-                                {iataAvailable.map((item) => {
-                                    <option value={item}>{item}</option>
-                                })}
-                            </>}
+                            {iataAvailable &&
+                                iataAvailable.map((item) => {
+                                    return <option value={item} key={item}>{item}</option>
+                                })
+                            }
                         </select>
                     </div>
                     <div className="grid__item grid__item--1-5">

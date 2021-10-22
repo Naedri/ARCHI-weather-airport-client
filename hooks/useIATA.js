@@ -6,10 +6,10 @@ const apiUrl = process.env.NEXT_PUBLIC_API;
 
 const getIATA = async () => {
 
-    const res = await axios.get(
+    const { data } = await axios.get(
         `${apiUrl}/iata`
     );
-    return res;
+    return data;
 };
 
 export default function useIATA() {
