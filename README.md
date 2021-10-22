@@ -4,7 +4,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-First, add a _.env.local_ file in the [hooks folder](./hooks) , containing the address of the database server `NEXT_PUBLIC_API`.
+First, add a _.env.local_ file , containing the address of the database server `NEXT_PUBLIC_API`.
 For example : `NEXT_PUBLIC_API=http://localhost:8080`.
 
 Then, run the client server:
