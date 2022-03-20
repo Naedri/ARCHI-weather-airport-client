@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "path": ".."
+    }
+  ],
+  "settings": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.": true
+    },
+    "prettier.requireConfig": true,
+    "prettier.configPath": ".prettierrc.json",
+    "prettier.ignorePath": ".prettierignore"
+  }
+}

@@ -1,17 +1,13 @@
-import { useQuery } from "react-query";
-import axios from "axios";
-
+import { useQuery } from 'react-query';
+import axios from 'axios';
 
 const apiUrl = process.env.NEXT_PUBLIC_API;
 
 const getIATA = async () => {
-
-    const { data } = await axios.get(
-        `${apiUrl}/iata`
-    );
-    return data;
+  const { data } = await axios.get(`${apiUrl}/iata`);
+  return data;
 };
 
 export default function useIATA() {
-    return useQuery("iata", getIATA);
+  return useQuery('iata', getIATA);
 }
